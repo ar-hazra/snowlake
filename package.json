@@ -1,0 +1,33 @@
+{
+  "name": "snowlake",
+  "version": "1.0.0",
+  "description": "snowlake",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app",
+    "api": "nodemon app",
+    "view": "npm start --prefix view",
+    "dev": "concurrently \"npm run api\" \"npm run view\"",
+    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install --prefix view && npm run build --prefix view"
+  },
+  "author": "Arnab Hazra",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-validator": "^6.10.0",
+    "googleapis": "^73.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "materialize-css": "^1.0.0-rc.2",
+    "mongoose": "^5.11.18",
+    "nodemailer": "^6.5.0",
+    "otp-generator": "^2.0.0",
+    "otp-without-db": "^1.0.4",
+    "sha256": "^0.2.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "concurrently": "^6.0.0",
+    "nodemon": "^2.0.7"
+  }
+}
