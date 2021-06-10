@@ -1,6 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap")
 
-$primaryColor: #212121
+$navColor: #212121
+$primaryGradient: linear-gradient(315deg, #2a2a72 0%, #009ffd 74%)
+$primaryColor: #009ffd
 $white : #ffffff
 $inputColor: #f7f7f7
 
@@ -42,7 +44,7 @@ body
     border-radius: 0px
  
     &-header   
-        background: $primaryColor
+        background: $primaryGradient
 
 .jumbotron 
     margin-top: 2rem
@@ -92,7 +94,7 @@ body
 
 .btn
     border: none
-    background: $primaryColor
+    background: $primaryGradient
     font-weight: bold
     border-radius: 50px
     padding-top: 0.7rem
@@ -188,10 +190,10 @@ textarea:focus
     color: $primaryColor
 
 .navbar 
-    background-color: $primaryColor
+    background-color: $navColor
     z-index: 2
     font-weight: bold
-    padding: 1.4rem
+    padding: 1.175rem
     
 .navbar-brand
     font-size: 110%

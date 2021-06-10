@@ -3,7 +3,7 @@
 ## Web Application URL
 * https://snowlake.herokuapp.com
 
-## Version 88 - Release 24.05.21
+## About
 * Changelog - Google OAuth Addition, New Dark Theme
 * Snowlake is a single page prototype management application
 * Database less cryptographically hashed OTP based OAuth 2 factor authentication

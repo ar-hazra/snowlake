@@ -31,7 +31,7 @@ function Navigation()
         return(
             <Navbar variant="dark" expand="lg">
                 <Container>
-                    <Link to="/"><Navbar.Brand>Snowlake</Navbar.Brand></Link>
+                    <Link to="/"><Navbar.Brand>SNOWLAKE</Navbar.Brand></Link>
                     <Navbar.Toggle></Navbar.Toggle>
                     <Navbar.Collapse>
                         <Nav className="ms-auto">
