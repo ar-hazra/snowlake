@@ -6,6 +6,8 @@ import { Redirect, useHistory, Link } from 'react-router-dom'
 import { Container } from 'react-bootstrap'
 import Navigation from '../reusables/Navigation'
 import useSession from '../hooks/useSession'
+import { useDispatch } from 'react-redux'
+import { setUser } from '../redux/UserActions'
 
 //Dashboard Component
 const Dashboard: React.FC = () =>
@@ -29,13 +31,12 @@ const Dashboard: React.FC = () =>
                     <Container>
                         <div className="cover covertext">
                             <p className="display-1">Snowlake</p>
-                            <p className="lead my-4 fw-bold">{ `Welcome, ${session.name.split(" ")[0]}` }<br/> { `${session.prototypeCount} % account storage used, ${100-session.prototypeCount} % free`} <br /> {`Your account MFA is turned ${session.mfa}, go to update to toggle`}</p>
+                            <p className="lead my-4 fw-bold">{ `Welcome, ${session.name.split(" ")[0]}` }<br/> { `${session.prototypeCount} % account storage used, ${100-session.prototypeCount} % free`} <br />Control your things from here</p>
                             <Link to ='/account/update' className="btn">Update Account<i className="fas fa-chevron-right"></i></Link>
                         </div>
                     </Container>
                 </Fragment> 
             )
-
         }
 
         else
@@ -50,8 +51,9 @@ const UpdateAccount: React.FC = () =>
 {
     //LOGIC
     const session = useSession()
-    const [state, setState] = useState({ name: '', password: '', mfa: '', alert: '' })
+    const [state, setState] = useState({ name: '', password: '', alert: '' })
     const history = useHistory()
+    const  dispatch = useDispatch()
 
     let handleUpdate = async(e:any) =>
     {
@@ -61,8 +63,10 @@ const UpdateAccount: React.FC = () =>
         try 
         {
             axios.defaults.headers.common['x-auth-token'] = localStorage.getItem('token')
-            const response = await axios.post('/api/account/update', state)
-            setState({ ...state, alert: response.data.msg })
+            const res = await axios.post('/api/account/update', state)
+            const response = await axios.get('/api/account/dashboard')
+            dispatch(setUser(response.data))
+            setState({ ...state, alert: res.data.msg })
         } 
         
         catch (error) 
@@ -106,11 +110,6 @@ const UpdateAccount: React.FC = () =>
                         <p className="logo logobox">Update Account</p>
                         <input type="text" id="name" name="name" placeholder="Change Name" onChange={ (e) => setState({ ...state, name: e.target.value }) } defaultValue={ session.name } autoComplete="off" required minLength={3} maxLength={40} />
                         <input type="password" id="new-password" autoComplete={ 'new-password' } name="password" placeholder="Old/New Password" onChange={ (e) => setState({ ...state, password: e.target.value }) } required minLength={8} maxLength={20} />
-                        <p className="lead text-center fw-bold">Multi factor authentication</p>
-                        <select className="form-select" aria-label="Default select example" defaultValue={ session.mfa } onChange={ (e) => setState({ ...state, mfa: e.target.value }) }>
-                            <option value="off">OFF</option>
-                            <option value="on">ON</option>
-                        </select><br/>
                         <p id="alert">{ state.alert }</p>
                         <button type="submit" className="btn btn-block">Update Account<i className="fas fa-chevron-right"></i></button><br/>
                         <Link to='/account/close' className='boxlink'>Close Your Account</Link>

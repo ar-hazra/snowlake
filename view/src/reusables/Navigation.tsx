@@ -9,7 +9,7 @@ function Navigation()
     if(localStorage.getItem("token"))
     {
         return(
-            <Navbar variant="dark" expand="lg">
+            <Navbar variant="light" expand="lg">
                 <Container>
                     <Link to="/account/dashboard"><Navbar.Brand>Dashboard</Navbar.Brand></Link>  
                     <Navbar.Toggle></Navbar.Toggle>
@@ -29,9 +29,9 @@ function Navigation()
     else
     {
         return(
-            <Navbar variant="dark" expand="lg">
+            <Navbar variant="light" expand="lg">
                 <Container>
-                    <Link to="/"><Navbar.Brand>SNOWLAKE</Navbar.Brand></Link>
+                    <Link to="/"><Navbar.Brand>Snowlake</Navbar.Brand></Link>
                     <Navbar.Toggle></Navbar.Toggle>
                     <Navbar.Collapse>
                         <Nav className="ms-auto">

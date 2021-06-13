@@ -7,6 +7,8 @@ import Loading from '../reusables/Loading'
 import Error from '../reusables/Error'
 import { useHistory, Link, Redirect } from 'react-router-dom'
 import useSession from '../hooks/useSession'
+import { useDispatch } from 'react-redux'
+import { setUser } from '../redux/UserActions'
 
 //New Prototype Component
 const NewPrototype: React.FC = () =>
@@ -15,6 +17,7 @@ const NewPrototype: React.FC = () =>
     const session = useSession()
     const [state, setState] = useState({  title: '', description: '', link: '', alert: '' })
     const history = useHistory()
+    const  dispatch = useDispatch()
 
     let handleSubmit = async(e:any) =>
     {
@@ -25,8 +28,10 @@ const NewPrototype: React.FC = () =>
 
         try
         {
-            const response = await axios.post('/api/prototype/new', state)
-            setState({ ...state, alert: response.data.msg })
+            const res = await axios.post('/api/prototype/new', state)
+            const response = await axios.get('/api/account/dashboard')
+            dispatch(setUser(response.data))
+            setState({ ...state, alert: res.data.msg })
         } 
 
         catch (error) 
@@ -75,6 +80,7 @@ const Library: React.FC = () =>
     const session = useSession()
     const [state, setState] = useState({ prototypes: [], isLoaded: false, show: false, alert: '' })
     const history = useHistory()
+    const  dispatch = useDispatch()
 
     useEffect(() => 
     {
@@ -108,6 +114,8 @@ const Library: React.FC = () =>
 
             setState({ ...state, prototypes: prototypes })
             await axios.delete(`/api/prototype/delete/${id}`)
+            const response = await axios.get('/api/account/dashboard')
+            dispatch(setUser(response.data))
         } 
         
         catch (error) 

@@ -3,13 +3,16 @@ import React, { Fragment, useState } from 'react'
 import axios from 'axios'
 import { Redirect, Link, useHistory } from 'react-router-dom'
 import Navigation from '../reusables/Navigation'
+import { useDispatch } from 'react-redux'
+import { setUser, resetUser } from '../redux/UserActions'
 
 //Signup Component
 const SignUp: React.FC = () =>
 {
     const [state, setState] = useState({ name: '', email: '', password: '', otp: '', hash:'', alert: '' })
     const [show, setShow] = useState({ step1: true, step2: false })
-    const history = useHistory()
+    const history: any = useHistory()
+    const dispatch = useDispatch()
 
     let getOTP = async(e: any) =>
     {
@@ -45,6 +48,9 @@ const SignUp: React.FC = () =>
         try 
         {   
             const res = await axios.post('/api/auth/signup/register', state)
+            axios.defaults.headers.common['x-auth-token'] = res.data.token
+            const response = await axios.get('/api/account/dashboard')  
+            dispatch(setUser(response.data))
             localStorage.setItem('token', res.data.token)
             history.push('/account/dashboard')
         } 
@@ -98,6 +104,7 @@ const SignIn: React.FC = () =>
     const [state, setState] = useState({ email: '', password: '', otp: '', hash:'', alert: '' })
     const [show, setShow] = useState({ step1: true, step2: false })
     const history: any = useHistory()
+    const dispatch = useDispatch()
 
     let getOTP = async(e: any) =>
     {
@@ -107,18 +114,8 @@ const SignIn: React.FC = () =>
         try 
         {     
             const response = await axios.post('/api/auth/signin/getotp', state)
-            
-            if(response.data.token)
-            {
-                localStorage.setItem('token', response.data.token)
-                history.push('/account/dashboard')
-            }
-
-            else
-            {
-                setState({ ...state, hash: response.data.hash, alert: response.data.msg })
-                setShow({ step1: false, step2: true })
-            }
+            setState({ ...state, hash: response.data.hash, alert: response.data.msg })
+            setShow({ step1: false, step2: true })
         } 
 
         catch (error: any) 
@@ -144,6 +141,9 @@ const SignIn: React.FC = () =>
         try 
         {
             const res = await axios.post('/api/auth/signin/login', state)
+            axios.defaults.headers.common['x-auth-token'] = res.data.token
+            const response = await axios.get('/api/account/dashboard')  
+            dispatch(setUser(response.data))
             localStorage.setItem('token', res.data.token)
             history.push('/account/dashboard')
         } 
@@ -280,6 +280,8 @@ const PasswordReset: React.FC = () =>
 const SignOut: React.FC = () =>
 {
     //LOGIC
+    const dispatch = useDispatch()
+    dispatch(resetUser())
     localStorage.removeItem("token")
   
     //JSX
