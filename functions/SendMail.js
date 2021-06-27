@@ -15,7 +15,7 @@ const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_U
 oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN })
 
 //Sendmail function
-async function sendMail(email, subject, content)
+async function sendMail(email, otp)
 {
     try 
     {
@@ -35,7 +35,8 @@ async function sendMail(email, subject, content)
                 accessToken: accessToken
             }
         })
-
+        let subject = 'Snowlake Team'
+        let content = `${ otp } is your verification code for Snowlake. Valid for 3 minutes. Please do not share the code with anyone.`
         await transporter.sendMail({ from: MAILER_UN, to: email, subject: subject, html: content }) 
     } 
     

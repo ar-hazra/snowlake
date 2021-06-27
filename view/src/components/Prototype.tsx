@@ -1,5 +1,5 @@
 //Import Statements
-import { Fragment, useState, useEffect } from 'react'
+import React, { Fragment, useState, useEffect } from 'react'
 import axios from 'axios'
 import Navigation from '../reusables/Navigation'
 import { Container, Jumbotron, Row, Card, Col } from 'react-bootstrap'

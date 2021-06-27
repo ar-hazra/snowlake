@@ -15,8 +15,8 @@ router.post
     auth,
 
     [
-        check('title', 'Title must be within 3 & 8 chars').isLength({ min: 3, max: 8 }),
-        check('description', 'Description is required').not().isEmpty(),
+        check('title', 'Title must be within 3 & 8 chars').isLength(3,8),
+        check('description', 'Description is required').notEmpty(),
         check('link', 'Link must be an URL').isURL()
     ],
 
@@ -123,9 +123,9 @@ router.post
     auth, 
 
     [
-        check('title', 'Title must be within 3 & 8 chars').isLength({ min: 3, max: 8 }),
-        check('description', 'Description is required').not().isEmpty(),
-        check('link', 'Link is required').not().isEmpty()
+        check('title', 'Title must be within 3 & 8 chars').isLength(3,8),
+        check('description', 'Description is required').notEmpty(),
+        check('link', 'Link is required').notEmpty()
     ],
 
     async(req,res)=> 
@@ -185,8 +185,8 @@ router.post
     auth,
 
     [
-        check('id', 'Id is required').not().isEmpty(),
-        check('accesstoken', 'Access token is required').not().isEmpty()
+        check('id', 'Id is required').notEmpty(),
+        check('accesstoken', 'Access token is required').notEmpty()
     ],
 
     async(req,res)=> 

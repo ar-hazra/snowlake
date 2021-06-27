@@ -1,7 +1,7 @@
 //Import Statements
 import { Redirect, Link } from 'react-router-dom'
 import { Container } from 'react-bootstrap'
-import { Fragment } from 'react'
+import React, { Fragment } from 'react'
 import Navigation from '../reusables/Navigation'
 
 //Home Component

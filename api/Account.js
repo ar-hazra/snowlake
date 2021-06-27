@@ -1,7 +1,8 @@
 //Import Statements
 const express = require('express')
 const { check, validationResult } = require('express-validator')
-const sha256 = require('sha256')
+const securePassword = require('../functions/SecurePassword')
+const comparePassword = require('../functions/ComparePassword')
 const auth = require('../middleware/auth')
 const User = require('../model/User')
 const Prototype = require('../model/Prototype')
@@ -47,8 +48,8 @@ router.post
     auth, 
 
     [
-        check('name', 'Name is required').not().isEmpty(),
-        check('password', 'Password must be within 8 & 18 chars').isLength({ min:8, max:18 })
+        check('name', 'Name is required').notEmpty(),
+        check('password', 'Password must be within 8 & 18 chars').isLength(8,18)
     ],
 
     async(req,res)=> 
@@ -62,12 +63,12 @@ router.post
 
         else
         {
-            let { name, password, mfa } = req.body
-            password = sha256.x2(password)
+            let { name, password } = req.body
+            password = securePassword(password)
             
             try
             {
-                await User.findByIdAndUpdate(req.id, { name, password, mfa })
+                await User.findByIdAndUpdate(req.id, { name, password })
                 return res.status(200).json({ msg: 'Profile Updated' })
             }
             
@@ -88,14 +89,14 @@ router.post
 
     async(req,res)=> 
     {
-        let password = req.body.password
-        password = sha256.x2(password)
-
+        let { password } = req.body
         const user = await User.findById(req.id)
 
         if(user)
         {
-            if(user.password === password)
+            const isPasswordMatching = await comparePassword(password, user.password)
+            
+            if(isPasswordMatching)
             {
                 await Prototype.deleteMany({ creator: req.id })
                 await User.findByIdAndDelete(req.id)

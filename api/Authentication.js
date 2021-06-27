@@ -1,12 +1,13 @@
 //Import Statements
 const express = require('express')
 const jwt = require('jsonwebtoken')
-const otpGen  = require("otp-generator")
-const otpTool = require("otp-without-db")
-const sha256 = require('sha256')
+const otpTool = require('otp-without-db')
 const { check, validationResult } = require('express-validator')
-const User = require('../model/User')
+const otpGenerator = require('../functions/OtpGenerator')
 const sendMail = require('../functions/SendMail')
+const securePassword = require('../functions/SecurePassword')
+const comparePassword = require('../functions/ComparePassword')
+const User = require('../model/User')
 const router = express.Router()
 require('dotenv').config()
 
@@ -20,8 +21,8 @@ router.post
     '/signup/getotp', 
 
     [
-        check('name', 'Name is required').not().isEmpty(),
-        check('email', 'Email is required').not().isEmpty()
+        check('name', 'Name is required').notEmpty(),
+        check('email', 'Please provide valid email').isEmail()
     ],
 
     async(req,res)=>
@@ -48,11 +49,9 @@ router.post
 
                 else
                 {
-                    let otp = otpGen.generate(6, { upperCase: false, specialChars: false, alphabets: false })
-                    let hash = otpTool.createNewOTP(email, otp, key=OTP_KEY, expiresAfter=3, algorithm="sha256")
-                    let subject = 'Snowlake Team'
-                    let content = `${ otp } is your verification code for Snowlake. Valid for 3 minutes.`
-                    sendMail(email, subject, content)
+                    let otp = otpGenerator()
+                    let hash = otpTool.createNewOTP(email, otp, key=OTP_KEY, expiresAfter=3, algorithm='sha256')
+                    sendMail(email, otp)
                     return res.status(200).json({ hash, msg: 'Please check OTP in Email' })
                 }
             } 
@@ -71,10 +70,10 @@ router.post
     '/signup/register', 
 
     [
-        check('name', 'Name is required').not().isEmpty(),
-        check('email', 'Email is required').not().isEmpty(),
-        check('password', 'Password must be within 8 & 18 chars').isLength({ min:8, max:18 }),
-        check('otp', 'OTP must be a 6 digit number').isLength({ min:6, max:6 })
+        check('name', 'Name is required').notEmpty(),
+        check('email', 'Please provide valid email').isEmail(),
+        check('password', 'Password must be within 8 & 18 chars').isLength(8,18),
+        check('otp', 'Invalid OTP format').isLength(6)
     ],
 
     async(req,res)=>
@@ -89,7 +88,7 @@ router.post
         else
         {
             let { name, email, password, otp, hash } = req.body
-            password = sha256.x2(password)
+            password = await securePassword(password)
 
             try 
             {
@@ -102,7 +101,7 @@ router.post
 
                 else
                 {
-                    const isOTPValid = otpTool.verifyOTP(email, otp, hash, key=OTP_KEY, algorithm="sha256")
+                    const isOTPValid = otpTool.verifyOTP(email, otp, hash, key=OTP_KEY, algorithm='sha256')
 
                     if(isOTPValid)
                     {
@@ -135,8 +134,8 @@ router.post
     '/signin/getotp', 
 
     [
-        check('email', 'Email is required').not().isEmpty(),
-        check('password', 'Password is required').not().isEmpty(),
+        check('email', 'Email is required').notEmpty(),
+        check('password', 'Password is required').notEmpty(),
     ],
 
     async(req,res)=>
@@ -151,11 +150,10 @@ router.post
         else
         {
             let { email, password } = req.body
-            password = sha256.x2(password)
 
             try 
             {
-                let user = await User.findOne({ email, password })
+                let user = await User.findOne({ email })
 
                 if(!user)
                 {
@@ -164,12 +162,20 @@ router.post
 
                 else
                 {
-                    let otp = otpGen.generate(6, { upperCase: false, specialChars: false, alphabets: false })
-                    let hash = otpTool.createNewOTP(email, otp, key=OTP_KEY, expiresAfter=3, algorithm="sha256")
-                    let subject = 'Snowlake Team'
-                    let content = `${ otp } is your verification code for Snowlake. Valid for 3 minutes.`
-                    sendMail(email, subject, content)
-                    return res.status(200).json({ hash, msg: 'Please check OTP in Email' })
+                    const isPasswordMatching = await comparePassword(password, user.password)
+
+                    if(isPasswordMatching)
+                    {
+                        let otp = otpGenerator()
+                        let hash = otpTool.createNewOTP(email, otp, key=OTP_KEY, expiresAfter=3, algorithm='sha256')
+                        sendMail(email, otp)
+                        return res.status(200).json({ hash, msg: 'Please check OTP in Email' })
+                    }
+
+                    else
+                    {
+                        return res.status(401).json({ msg: 'Invalid Credentials' })
+                    }
                 }
             } 
 
@@ -187,9 +193,9 @@ router.post
     '/signin/login',
 
     [
-        check('email', 'Email is required').not().isEmpty(),
-        check('password', 'Password is required').not().isEmpty(),
-        check('otp', 'OTP must be a 6 digit number').isLength({ min:6, max:6 })
+        check('email', 'Email is required').notEmpty(),
+        check('password', 'Password is required').notEmpty(),
+        check('otp', 'OTP must be a 6 digit number').isLength(6)
     ],
 
     async(req, res) =>
@@ -204,11 +210,10 @@ router.post
         else
         {
             let { email, password, otp, hash } = req.body
-            password = sha256.x2(password)
 
             try 
             {
-                let user = await User.findOne({ email, password })
+                let user = await User.findOne({ email })
 
                 if(!user)
                 {
@@ -217,18 +222,27 @@ router.post
 
                 else
                 {
-                    const isOTPValid = otpTool.verifyOTP(email, otp, hash, key=OTP_KEY, algorithm="sha256")
+                    const isPasswordMatching = await comparePassword(password, user.password)
+                    const isOTPValid = otpTool.verifyOTP(email, otp, hash, key=OTP_KEY, algorithm='sha256')
                     
-                    if(isOTPValid)
+                    if(isPasswordMatching)
                     {
-                        const payload = { id: user.id }
-                        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 86400 })
-                        return res.status(200).json({ token })
+                        if(isOTPValid)
+                        {
+                            const payload = { id: user.id }
+                            const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 86400 })
+                            return res.status(200).json({ token })
+                        }
+    
+                        else
+                        {
+                            return res.status(400).json({ msg: 'Invalid OTP' })
+                        }
                     }
 
                     else
                     {
-                        return res.status(400).json({ msg: 'Invalid OTP' })
+                        return res.status(401).json({ msg: 'Invalid Credentials' })
                     }
                 }
             } 
@@ -247,7 +261,7 @@ router.post
     '/pwreset/getotp',
 
     [
-        check('email', 'Email is required').not().isEmpty(),
+        check('email', 'Email is required').notEmpty(),
     ],
 
     async(req,res)=>
@@ -274,11 +288,9 @@ router.post
 
                 else
                 {
-                    let otp = otpGen.generate(6, { upperCase: false, specialChars: false, alphabets: false })
-                    let hash = otpTool.createNewOTP(email, otp, key=OTP_KEY, expiresAfter=3, algorithm="sha256")
-                    let subject = 'Snowlake Team'
-                    let content = `${ otp } is your verification code for Snowlake. Valid for 3 minutes.`
-                    sendMail(email, subject, content)
+                    let otp = otpGenerator()
+                    let hash = otpTool.createNewOTP(email, otp, key=OTP_KEY, expiresAfter=3, algorithm='sha256')
+                    sendMail(email, otp)
                     return res.status(200).json({ hash, msg: 'Please check OTP in Email' })
                 }
             } 
@@ -297,9 +309,9 @@ router.post
     '/pwreset/reset', 
 
     [
-        check('email', 'Email is required').not().isEmpty(),
-        check('password', 'Password must be within 8 & 18 chars').isLength({ min:8, max:18 }),
-        check('otp', 'OTP must be a 6 digit number').isLength({ min:6, max:6 })
+        check('email', 'Email is required').notEmpty(),
+        check('password', 'Password must be within 8 & 18 chars').isLength(8,18),
+        check('otp', 'OTP must be a 6 digit number').isLength(6)
     ],
 
     async(req,res)=>
@@ -314,7 +326,7 @@ router.post
         else
         {
             let { email, password, otp, hash } = req.body
-            password = sha256.x2(password)
+            password = await securePassword(password)
             
             try 
             {
@@ -327,7 +339,7 @@ router.post
 
                 else
                 {
-                    const isOTPValid = otpTool.verifyOTP(email, otp, hash, key=OTP_KEY, algorithm="sha256")
+                    const isOTPValid = otpTool.verifyOTP(email, otp, hash, key=OTP_KEY, algorithm='sha256')
 
                     if(isOTPValid)
                     {
